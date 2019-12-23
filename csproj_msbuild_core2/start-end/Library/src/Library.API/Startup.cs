@@ -11,6 +11,8 @@ using Microsoft.Extensions.Configuration;
 using Library.API.Services;
 using Library.API.Entities;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
+using Library.API.Helpers;
 
 namespace Library.API
 {
@@ -37,6 +39,7 @@ namespace Library.API
 
             // register the repository
             services.AddScoped<ILibraryRepository, LibraryRepository>();
+            services.AddSingleton<IAutoMapperConfig, AutoMapperConfig>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,9 +52,17 @@ namespace Library.API
             }
             else
             {
-                app.UseExceptionHandler();
+                app.UseExceptionHandler(appBuilder => {
+                    appBuilder.Run(async context =>
+                    {
+                        context.Response.StatusCode = 500;
+                        await context.Response.WriteAsync("An unexpected fault happend. Try again later.");
+                    });
+                });
+
             }
 
+        
             libraryContext.EnsureSeedDataForContext();
 
             app.UseMvc(); 
